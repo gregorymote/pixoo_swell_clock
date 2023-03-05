@@ -15,6 +15,7 @@ python -m venv venv
 # Activate virtual environment
 
 Windows: venv\Scripts\activate.bat
+
 Linux: source venv/bin/activate
 
 # Install Requirements
