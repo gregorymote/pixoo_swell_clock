@@ -6,7 +6,7 @@ Display is only using Pixoo Tkinter simulator. Integration with Pixoo 64 TBD
 
 ![Swell 1](./images/display-screenshot-1.PNG)
 
-![Swell 2](./images/display-screenshot-1.PNG)
+![Swell 2](./images/display-screenshot-2.PNG)
 
 # Create virutal environment
 
