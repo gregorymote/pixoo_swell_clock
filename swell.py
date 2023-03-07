@@ -72,7 +72,7 @@ def check_end(x, end):
     if x < end:
         return x
     else:
-        return end
+        return end - 1
     
 
 def clear_screen(pixoo):
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         clear_screen(pixoo)
         today = swell[i]
         times = []
-        colors = {"green": (60, 179, 113), "orange": (255, 165, 0), "red": (255, 0, 0), "white":(255,255,255), "blue": (0,191,255)}
+        colors = {"green": (60, 179, 113), "orange": (255, 165, 0), "red": (255, 0, 0), "white":(255,255,255), "blue": (0,191,255), "wave": (0,0,255), "silver":(192,192,192)}
         for item in today:
             if item != 'date' and item != 'tide' and item != 'Noon':
                 value = re.findall(r'\d+', item)[0]
@@ -102,7 +102,8 @@ if __name__ == "__main__":
 
         y = 1
         start = 9
-        end = 63     
+        end = 54
+        #end = 63     
 
         for hour in today:
             if hour != 'date' and hour != 'tide' and hour != 'Noon':
@@ -113,25 +114,34 @@ if __name__ == "__main__":
                 time = '12'
             else:
                 continue
-            
             pixoo.draw_text(time, (1, y), colors['blue'])
             y+=8
             height = int(re.findall(r'\d+', today[hour]['height'])[0])
             period = int(re.findall(r'\d+', today[hour]['period'])[0])
+            wind_speeds = re.findall(r'\d+', today[hour]['wind_speed'])
             color = colors[today[hour]['color']]
             i = start
             while i < end:
                 x1 = check_end(i, end)
                 x2 = check_end(int(i + period/2), end)
-                pixoo.draw_line((x1, y - 3 - height), (x2, y - 3), color)
+                y1 = y - 3 - height
+                y2 = y - 3
+                pixoo.draw_line((x1, y1), (x2, y2), colors['wave'])
                 #pixoo.draw_pixel((i, y - 3 - height), color)
+                print(x1, x2)
                 i= int(i + period/2)
                 x1 = check_end(i, end)
                 x2 = check_end(int(i + period/2), end)
-                pixoo.draw_line((x1, y - 3), (x2, y - 3 - height), color)
+                y1 = y - 3
+                y2 = y - 3 - height
+                pixoo.draw_line((x1, y1), (x2, y2), colors['wave'])
                 #pixoo.draw_pixel((i, y - 3), color)
                 i= int(i + period/2)
+            wind_start = check_end(start + int(wind_speeds[0]), end)
+            wind_end = check_end(start + int(wind_speeds[1]), end)
             pixoo.draw_line((start, y-2), (end, y-2), colors['white'])
+            #pixoo.draw_line((start, y-2), (wind_start, y-2), colors['silver'])
+            pixoo.draw_line((wind_start, y-2), (wind_end, y-2), color)
         pixoo.push()
 
         sleep(5)
