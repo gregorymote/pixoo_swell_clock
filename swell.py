@@ -78,6 +78,22 @@ def check_end(x, end):
 def clear_screen(pixoo):
     for i in range(0, 64*64):
         pixoo.draw_pixel_at_index(i, (0, 0, 0))
+
+
+def get_time_index(time):
+    if len(time) == 6:
+        time = '0' + time
+    hour = int(time[:2])
+    minute = int(time[3:5])
+    meridiem = time[5:]
+    
+    if hour == 12:
+        hour = 0
+    index = hour*60 + minute
+    if meridiem == 'PM':
+        index += 12*60
+
+    return int(index/1440 * 64)
     
 
 if __name__ == "__main__":
@@ -90,6 +106,9 @@ if __name__ == "__main__":
         clear_screen(pixoo)
         today = swell[i]
         times = []
+        y = 1
+        start = 9
+        end = 54
         colors = {"green": (60, 179, 113), "orange": (255, 165, 0), "red": (255, 0, 0), "white":(255,255,255), "blue": (0,191,255), "wave": (0,0,255), "silver":(192,192,192)}
         for item in today:
             if item != 'date' and item != 'tide' and item != 'Noon':
@@ -99,11 +118,19 @@ if __name__ == "__main__":
                 times.append(value)
             elif item == 'Noon':
                 times.append('12')
-
-        y = 1
-        start = 9
-        end = 54
-        #end = 63     
+        
+        prev = ''
+        for tide in today['tide']:
+            index = get_time_index(tide['time'])
+            if tide['type'] == 'Low':
+                curr = (end+1, index)
+                #pixoo.draw_pixel((end+1, index), colors['silver'])
+            else:
+                curr = (end+8, index)
+                #pixoo.draw_pixel((end+8, index), colors['silver'])
+            if prev != '':
+                pixoo.draw_line(prev, curr, colors['blue'])
+            prev = curr
 
         for hour in today:
             if hour != 'date' and hour != 'tide' and hour != 'Noon':
@@ -128,7 +155,6 @@ if __name__ == "__main__":
                 y2 = y - 3
                 pixoo.draw_line((x1, y1), (x2, y2), colors['wave'])
                 #pixoo.draw_pixel((i, y - 3 - height), color)
-                print(x1, x2)
                 i= int(i + period/2)
                 x1 = check_end(i, end)
                 x2 = check_end(int(i + period/2), end)
