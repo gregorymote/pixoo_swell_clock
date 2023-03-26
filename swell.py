@@ -4,13 +4,22 @@ from time import sleep
 from bs4 import BeautifulSoup
 from pixoo import Pixoo
 from pixoo.simulator import SimulatorConfig
+from datetime import datetime
 
+colors = {
+    "green": (60, 179, 113),
+    "orange": (255, 165, 0),
+    "red": (255, 0, 0),
+    "white":(255,255,255),
+    "blue": (0,191,255),
+    "wave": (0,0,255),
+    "silver":(192,192,192),
+    "gold": (255,215,0)
+}
 
 def get_tide_data(soup):
-
     table = soup.find('table', attrs={'class':'table-tide'})
     rows = table.find_all('tr')
-
     data = []
     key = ['type', 'time', 'height']
     for row in rows:
@@ -19,6 +28,19 @@ def get_tide_data(soup):
         for idx, col in enumerate(cols):
             tide[key[idx]] = col.text.strip()
         data.append(tide)
+    return data
+
+def get_light_data(soup):
+    table = soup.find_all('table', attrs={'class':'table-tide'})[1]
+    rows = table.find_all('tr')
+    data = []
+    key = ['type', 'time']
+    for row in rows:
+        light = {}
+        cols = row.find_all('td')
+        for idx, col in enumerate(cols):
+            light[key[idx]] = col.text.strip()
+        data.append(light)
     return data
 
 
@@ -62,6 +84,7 @@ def get_swell_data(soup):
                         idx+=1
             elif 'class' in row.attrs and 'msw-js-tide' in row.attrs['class']:
                 day['tide'] = get_tide_data(row)
+                day['light'] = get_light_data(row)
             if 'time' in hour:
                 day[hour['time']] = hour           
         data.append(day)
@@ -109,9 +132,8 @@ if __name__ == "__main__":
         y = 1
         start = 9
         end = 54
-        colors = {"green": (60, 179, 113), "orange": (255, 165, 0), "red": (255, 0, 0), "white":(255,255,255), "blue": (0,191,255), "wave": (0,0,255), "silver":(192,192,192)}
         for item in today:
-            if item != 'date' and item != 'tide' and item != 'Noon':
+            if item not in {'date','tide','Noon','light'}:
                 value = re.findall(r'\d+', item)[0]
                 if len(value) == 1:
                     value = '0' + value
@@ -119,6 +141,20 @@ if __name__ == "__main__":
             elif item == 'Noon':
                 times.append('12')
         
+        #draw day light
+        for light in today['light']:
+            if light['type'] == 'Sunrise':
+                sunrise = get_time_index(light['time'])
+            elif light['type'] == 'Sunset':
+                sunset = get_time_index(light['time'])
+            elif light['type'] == 'First Light':
+                first = get_time_index(light['time'])
+            elif light['type'] == 'Last Light':
+                last = get_time_index(light['time'])
+        pixoo.draw_filled_rectangle((end+1, first), (64, last), colors['silver'])
+        pixoo.draw_filled_rectangle((end+1, sunrise), (64, sunset), colors['white'])
+       
+        #draw tide
         prev = ''
         for tide in today['tide']:
             index = get_time_index(tide['time'])
@@ -131,9 +167,13 @@ if __name__ == "__main__":
             if prev != '':
                 pixoo.draw_line(prev, curr, colors['blue'])
             prev = curr
+        
+        #draw current time
+        now = get_time_index(datetime.now().strftime("%I:%M%p"))
+        pixoo.draw_line((end+1, now), (64, now), colors['gold'])
 
         for hour in today:
-            if hour != 'date' and hour != 'tide' and hour != 'Noon':
+            if hour not in {'date','tide','Noon','light'}:
                 time = re.findall(r'\d+', hour)[0]
                 if len(time) == 1:
                     time = '0' + time
